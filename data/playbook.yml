@@ -1,4 +1,6 @@
 - hosts: localhost
   tasks:
   - name: 'Helo'
-    command: /bin/echo
+    command: azure login
+        -u pvillarruel@telefe.com.ar
+        -p XXEdificio0146

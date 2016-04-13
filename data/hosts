@@ -1,0 +1,20 @@
+### DEPLOY DEPENDANT VARIABLES ###
+
+[all:vars]
+
+rgName="PlatDigTest01"
+location="brazilsouth"
+
+vmsize="Standard_A1"
+vmname="PlatDigTest01"
+username="azure_admin"
+sshfile="$HOME/docker/openssl/mycert.pem"
+image="Canonical:UbuntuServer:14.04.4-LTS:latest"
+disksize="60"
+
+vnetName="$rgName_$location"
+vnetPrefix="192.168.0.0/16"
+subnetName="Sub01"
+subnetPrefix="192.168.1.0/24"
+privateIPAddress="192.168.1.10"
+nicName="$vmname"
