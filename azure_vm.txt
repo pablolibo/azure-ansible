@@ -1,0 +1,74 @@
+#/bin/bash
+
+rgName="PlatDigTest01"
+location="brazilsouth"
+
+vmsize="Standard_A1"
+vmname="PlatDigTest01"
+username="azure_admin"
+sshfile="$HOME/docker/openssl/mycert.pem"
+image="Canonical:UbuntuServer:14.04.4-LTS:latest"
+disksize="60"
+
+vnetName="$rgName_$location"
+vnetPrefix="192.168.0.0/16"
+subnetName="Sub01"
+subnetPrefix="192.168.1.0/24"
+privateIPAddress="192.168.1.10"
+nicName="$vmname"
+
+azure group create $rgName $location
+
+azure network vnet create --resource-group $rgName \
+    --name $vnetName \
+    --address-prefixes $vnetPrefix \
+    --location $location
+
+azure network vnet subnet create --resource-group $rgName \
+    --vnet-name $vnetName \
+    --name $subnetName \
+    --address-prefix $subnetPrefix	
+
+#azure network public-ip create --resource-group $rgName \
+#    --name $pipName \
+#    --location $location \
+#    --allocation-method Static \
+#    --domain-name-label $dnsName 
+	
+subnetId="$(azure network vnet subnet show --resource-group $rgName \
+    --vnet-name $vnetName \
+    --name $subnetName|grep Id)"
+
+subnetId=${subnetId#*/}
+
+azure network nic create --name $nicName \
+    --resource-group $rgName \
+    --location $location \
+    --private-ip-address $privateIPAddress \
+    --subnet-id $subnetId 
+#    --public-ip-name $pipName
+	
+azure vm create \
+	--vm-size $vmsize \
+	--resource-group $rgName \
+	--name $vmname \
+	--location $location \
+	--admin-username $username \
+	--ssh-publickey-file $sshfile \
+	--os-type Linux \
+	--image-urn $image \
+	--data-disk-size $disksize \
+	--subnet-id $subnetId \
+	--nic-names $nicName
+
+#	--vm-size Standard_A1 \
+#	--resource-group test \
+#	--name PlatDigtest02 \
+#	--location brazilsouth \
+#	--admin-username azure_admin \
+#	--ssh-publickey-file $HOME/docker/openssl/mycert.pem \
+#	--os-type Linux \
+#	--image-urn Canonical:UbuntuServer:14.04.4-LTS:latest \
+#	--data-disk-size $disk-size \
+#	--subnet-id $subnetId \
+#	--nic-names $nicName
