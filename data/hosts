@@ -2,19 +2,24 @@
 
 [all:vars]
 
-rgName="PlatDigTest01"
-location="brazilsouth"
+rgName = PlatDigTestAnsible02
+location = eastus
+#location = brazilsouth
 
-vmsize="Standard_A1"
-vmname="PlatDigTest01"
-username="azure_admin"
-sshfile="$HOME/docker/openssl/mycert.pem"
-image="Canonical:UbuntuServer:14.04.4-LTS:latest"
-disksize="60"
+vmsize = Standard_A1
+vmname = PlatDigTest01
+username = azure_admin
+sshfile = /mnt/azure.pub
+image = Canonical:UbuntuServer:14.04.4-LTS:latest
+type_os = Linux
+disksize = 60
 
-vnetName="$rgName_$location"
-vnetPrefix="192.168.0.0/16"
-subnetName="Sub01"
-subnetPrefix="192.168.1.0/24"
-privateIPAddress="192.168.1.10"
-nicName="$vmname"
+vnetName = PlatDigTest01
+vnetPrefix = 192.168.0.0/16
+subnetName = Sub01
+subnetPrefix = 192.168.1.0/24
+privateIPAddress = 192.168.1.10
+nicName = PlatDigTest01
+
+gwsubPrefix = 192.168.255.0/27
+gwsubName = GatewaySubnet

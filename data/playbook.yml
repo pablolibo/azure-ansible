@@ -1,6 +1,84 @@
+---
 - hosts: localhost
   tasks:
-  - name: 'Helo'
-    command: azure login
-        -u pvillarruel@telefe.com.ar
-        -p XXEdificio0146
+  - name: 'is create Azure Resource?'
+    shell: azure group list | grep "{{ rgName }}"
+    register: check_resource
+    ignore_errors: yes
+
+  - name: 'Create Azure Resource'
+    shell: azure group create "{{ rgName }}" "{{ location }}"
+    when: check_resource.rc != 0
+
+  - name: 'is create Azure Network?'
+    shell: azure network vnet list {{ rgName }} | grep {{ vnetName }}
+    register: check_network
+    ignore_errors: yes
+
+  - name: 'Create the Network Resource'
+    shell: azure network vnet create --resource-group {{ rgName }} --name {{ vnetName }} --address-prefixes {{ vnetPrefix }} --location {{ location }}
+    when: check_network.rc != 0
+
+  - name: 'is create the Azure Subnet Network'
+    shell: azure network vnet subnet list {{ rgName }} {{ vnetName }} | grep {{ subnetName}}
+    register: check_subnet
+    ignore_errors: yes
+
+  - name: 'Create the Subnet Azure'
+    shell: azure network vnet subnet create --resource-group {{ rgName }} --vnet-name {{ vnetName }} --name {{ subnetName }} --address-prefix {{ subnetPrefix }}
+    when: check_subnet.rc != 0
+
+  - name: 'is Create Public IP'
+    shell: azure network public-ip list --resource-group {{ rgName }} | grep {{ vmname }}
+    register: check_ip_public
+    ignore_errors: yes
+
+  - name: 'Create Public IP'
+    shell: azure network public-ip create --resource-group {{ rgName }} --name {{ vmname }} --location {{ location }} --allocation-method Static
+    when: check_ip_public.rc != 0
+
+  - name: 'is Create Public IP'
+    shell: azure network public-ip list --resource-group {{ rgName }} | grep GatewayIP
+    register: check_ip_public_gateway
+    ignore_errors: yes
+
+  - name: 'is Create Public IP Gateway'
+    shell: azure network public-ip create --resource-group {{ rgName }} --name GatewayIP --location {{ location }} --allocation-method Dynamic
+    when: check_ip_public_gateway.rc != 0
+
+  - name: 'is Create Azure Storage'
+    shell: azure storage account list --resource-group {{ rgName }} | grep -i {{ rgName }}
+    register: check_storage
+    ignore_errors: yes
+
+  - name: 'Create Azure Storage'
+    shell: azure storage account create {{ rgName | lower }} --resource-group {{ rgName }} --location {{ location }} --type LRS 
+    when: check_storage.rc != 0
+
+  - name: 'Register subnet-id'
+    shell: subnetId="$(azure network vnet subnet show --resource-group {{ rgName }} --vnet-name {{ vnetName }} --name {{ subnetName }}|grep Id)" && subnetId=${subnetId#*/} && echo $subnetId
+    register: subnetid
+#    run_once: true
+
+  - name: 'Set output subnet-id'
+    set_fact:
+     subnetid_key={{subnetid.stdout}}
+#    run_once: true
+
+  - name: 'is Create a NIC'
+    shell: azure network nic list --resource-group {{ rgName }} | grep {{ nicName }}
+    register: check_nic
+    ignore_errors: yes
+
+  - name: 'Create a NIC'
+    shell: azure network nic create --name {{ nicName }} --resource-group {{ rgName }} --location {{ location }} --private-ip-address {{ privateIPAddress }} --subnet-id {{ subnetid_key }} --public-ip-name {{ vmname }}
+    when: check_nic.rc != 0
+
+  - name: 'Is Create VM azure'
+    shell: azure vm list --resource-group {{ rgName }} | grep {{ vmname }}
+    register: check_vm
+    ignore_errors: yes
+
+  - name: 'Create VM Azure :-P '
+    shell: azure vm create --vm-size {{ vmsize }} --resource-group {{ rgName }} --name {{ vmname }} --location {{ location }} --admin-username {{ username }} --ssh-publickey-file {{ sshfile }} --storage-account-name {{ rgName | lower }} --os-type {{ type_os }} --image-urn {{ image }} --data-disk-size {{ disksize }} --subnet-id {{ subnetid_key }} --nic-names {{ nicName }}
+    when: check_vm.rc != 0
