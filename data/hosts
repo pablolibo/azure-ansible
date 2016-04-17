@@ -1,4 +1,19 @@
-### DEPLOY DEPENDANT VARIABLES ###
+#HELP!
+#ansible localhost -i data/hosts -m debug -a 'msg={{ hostvars["controller01"]["ansible_ssh_host"] | to_json }}'
+#ansible localhost -i data/hosts -m debug -a 'msg={{ groups["test"]["ansible_ssh_host"] | to_json }}'
+##hostvars["controller01"]["ansible_ssh_host"]
+
+
+
+
+#Group
+[test]
+PlatDigAnsible01 ansible_ssh_host=192.168.1.100
+PlatDigAnsible02 ansible_ssh_host=192.168.1.101
+PlatDigAnsible03 ansible_ssh_host=192.168.1.102
+PlatDigAnsible04 ansible_ssh_host=192.168.1.103
+
+
 
 [all:vars]
 

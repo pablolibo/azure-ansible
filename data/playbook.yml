@@ -28,23 +28,23 @@
     shell: azure network vnet subnet create --resource-group {{ rgName }} --vnet-name {{ vnetName }} --name {{ subnetName }} --address-prefix {{ subnetPrefix }}
     when: check_subnet.rc != 0
 
-  - name: 'is Create Public IP'
-    shell: azure network public-ip list --resource-group {{ rgName }} | grep {{ vmname }}
-    register: check_ip_public
-    ignore_errors: yes
+#  - name: 'is Create Public IP'
+#    shell: azure network public-ip list --resource-group {{ rgName }} | grep {{ vmname }}
+#    register: check_ip_public
+#    ignore_errors: yes
 
-  - name: 'Create Public IP'
-    shell: azure network public-ip create --resource-group {{ rgName }} --name {{ vmname }} --location {{ location }} --allocation-method Static
-    when: check_ip_public.rc != 0
+#  - name: 'Create Public IP'
+#    shell: azure network public-ip create --resource-group {{ rgName }} --name {{ vmname }} --location {{ location }} --allocation-method Static
+#    when: check_ip_public.rc != 0
 
-  - name: 'is Create Public IP'
-    shell: azure network public-ip list --resource-group {{ rgName }} | grep GatewayIP
-    register: check_ip_public_gateway
-    ignore_errors: yes
+#  - name: 'is Create Public IP'
+#    shell: azure network public-ip list --resource-group {{ rgName }} | grep GatewayIP
+#    register: check_ip_public_gateway
+#    ignore_errors: yes
 
-  - name: 'is Create Public IP Gateway'
-    shell: azure network public-ip create --resource-group {{ rgName }} --name GatewayIP --location {{ location }} --allocation-method Dynamic
-    when: check_ip_public_gateway.rc != 0
+#  - name: 'is Create Public IP Gateway'
+#    shell: azure network public-ip create --resource-group {{ rgName }} --name GatewayIP --location {{ location }} --allocation-method Dynamic
+#    when: check_ip_public_gateway.rc != 0
 
   - name: 'is Create Azure Storage'
     shell: azure storage account list --resource-group {{ rgName }} | grep -i {{ rgName }}
@@ -58,27 +58,22 @@
   - name: 'Register subnet-id'
     shell: subnetId="$(azure network vnet subnet show --resource-group {{ rgName }} --vnet-name {{ vnetName }} --name {{ subnetName }}|grep Id)" && subnetId=${subnetId#*/} && echo $subnetId
     register: subnetid
-#    run_once: true
 
   - name: 'Set output subnet-id'
     set_fact:
      subnetid_key={{subnetid.stdout}}
-#    run_once: true
 
   - name: 'is Create a NIC'
-    shell: azure network nic list --resource-group {{ rgName }} | grep {{ nicName }}
-    register: check_nic
-    ignore_errors: yes
+    shell: azure network nic list --resource-group {{ rgName }} > /tmp/nic_{{ rgName }}
 
   - name: 'Create a NIC'
-    shell: azure network nic create --name {{ nicName }} --resource-group {{ rgName }} --location {{ location }} --private-ip-address {{ privateIPAddress }} --subnet-id {{ subnetid_key }} --public-ip-name {{ vmname }}
-    when: check_nic.rc != 0
+    shell: if ! grep {{ item }} /tmp/nic_{{ rgName }}; then azure network nic create --name {{ item }} --resource-group {{ rgName }} --location {{ location }} --private-ip-address {{ hostvars[item]["ansible_ssh_host"] }} --subnet-id {{ subnetid_key }}; fi
+    with_items: groups['test']
+
 
   - name: 'Is Create VM azure'
-    shell: azure vm list --resource-group {{ rgName }} | grep {{ vmname }}
-    register: check_vm
-    ignore_errors: yes
+    shell: azure vm list --resource-group {{ rgName }} > /tmp/vm_{{ rgName }}
 
   - name: 'Create VM Azure :-P '
-    shell: azure vm create --vm-size {{ vmsize }} --resource-group {{ rgName }} --name {{ vmname }} --location {{ location }} --admin-username {{ username }} --ssh-publickey-file {{ sshfile }} --storage-account-name {{ rgName | lower }} --os-type {{ type_os }} --image-urn {{ image }} --data-disk-size {{ disksize }} --subnet-id {{ subnetid_key }} --nic-names {{ nicName }}
-    when: check_vm.rc != 0
+    shell: if ! grep {{ item }} /tmp/vm_{{ rgName }}; then azure vm create --vm-size {{ vmsize }} --resource-group {{ rgName }} --name {{ item }} --location {{ location }} --admin-username {{ username }} --ssh-publickey-file {{ sshfile }} --storage-account-name {{ rgName | lower }} --os-type {{ type_os }} --image-urn {{ image }} --data-disk-size {{ disksize }} --subnet-id {{ subnetid_key }} --nic-names {{ item }}; fi
+    with_items: groups['test']
