@@ -10,8 +10,8 @@
 [test]
 PlatDigAnsible01 ansible_ssh_host=192.168.1.100 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True
 PlatDigAnsible02 ansible_ssh_host=192.168.1.101 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True 
-#PlatDigAnsible03 ansible_ssh_host=192.168.1.102 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=true
-#PlatDigAnsible04 ansible_ssh_host=192.168.1.103 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=false
+PlatDigAnsible03 ansible_ssh_host=192.168.1.102 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
+PlatDigAnsible04 ansible_ssh_host=192.168.1.103 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
 
 
 [all:vars]

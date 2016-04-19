@@ -72,3 +72,5 @@ azure vm create \
 #	--data-disk-size $disk-size \
 #	--subnet-id $subnetId \
 #	--nic-names $nicName
+
+azure network vpn-gateway create --resource-group PlatDigTestAnsible05 --name PlatDigTestAnsible05 --location eastus --sku-name Standard --public-ip-name GatewayIP --vnet-name PlatDigTestAnsible05
