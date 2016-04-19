@@ -29,6 +29,7 @@
     register: check_network_gateway
     ignore_errors: yes
     changed_when: check_network_gateway.rc != 0
+    when: gwsubPrefix is defined and gwsubName is defined
 
   - name: 'Creating the Sub Network Gateway Resource'
     shell: >
@@ -53,7 +54,6 @@
   - name: 'was Created Public IP'
     shell: azure network public-ip list --resource-group {{ rgName }} > /tmp/ip_{{ rgName }}
     register: check_ip_public
-    ignore_errors: yes
     changed_when: check_ip_public.rc != 0
     
   - name: 'Creating Public IP'
@@ -62,8 +62,8 @@
       azure network public-ip create --resource-group {{ rgName }} 
       --name {{ item }} --location {{ location }} --allocation-method Static; 
       fi
-    when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool and check_ip_public.rc != 0"
-    with_items: groups['test']
+    when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
+    with_items: groups.test
 
   - name: 'was Created Public IP Gateway'
     shell: azure network public-ip list --resource-group {{ rgName }} | grep -w GatewayIP
@@ -114,7 +114,7 @@
       fi
     changed_when: False
     when: "hostvars[item]['public_ip'] is defined and not hostvars[item]['public_ip']|bool"
-    with_items: groups['test']
+    with_items: groups.test
     
     
   - name: 'Creating a NIC with public ip'
@@ -126,7 +126,7 @@
       fi
     changed_when: False
     when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
-    with_items: groups['test']    
+    with_items: groups.test
 
 #  - debug: var=debug_nic
     
@@ -135,7 +135,7 @@
     register: create_vm
     changed_when: create_vm.rc != 0
 
-  - name: 'Creating VM Azure :-P '
+  - name: 'Creating VM Azure with second disk'
     shell: >
       if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then 
       azure vm create --vm-size {{ hostvars[item]['vmsize'] }} 
@@ -147,18 +147,38 @@
       --nic-names {{ item }};
       fi
     changed_when: False
-    with_items: groups['test']
+    with_items: groups.test
+    when: "{{ hostvars[item]['disksize'] }} > 0"
+
+  - name: 'Creating VM Azure'
+    shell: >
+      if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then
+      azure vm create --vm-size {{ hostvars[item]['vmsize'] }}
+      --resource-group {{ rgName }} --name {{ item }}
+      --location {{ location }} --admin-username {{ username }}
+      --ssh-publickey-file {{ sshfile }} --storage-account-name {{ rgName | lower }}
+      --os-type {{ hostvars[item]['type_os'] }} --image-urn {{ hostvars[item]['image'] }}
+      --subnet-id {{ subnetid_key }}
+      --nic-names {{ item }};
+      fi
+    changed_when: False
+    with_items: groups.test
+    when: "{{ hostvars[item]['disksize'] }} == 0"
     
   - name: 'was Created VPN-Gateway?'
     shell: >
-      azure network vpn-gateway list --resource-group {{ rgName }} | grep -w {{ rgName }}
+      azure network vpn-gateway list --resource-group {{ rgName }} > /tmp/gateway_{{ rgName }}
     register: check_gateway
     changed_when: check_gateway.rc != 0
+    when: gwsubPrefix is defined and gwsubName is defined
     
   - name: 'Creating a VPN-Gateway'
     shell: >
+      if ! grep -w {{ rgName }} /tmp/gateway_{{ rgName }}; then
       azure network vpn-gateway create --resource-group {{ rgName }}
       --name {{ rgName }} --location {{ location }}
-      --sku-name Standard --public-ip-name GatewayIP --vnet-name {{ rgName }}
-    when: check_gateway.rc != 0
-    
+      --sku-name Basic --public-ip-name GatewayIP --vnet-name {{ rgName }};
+      fi
+    register: check_gateway_created
+    changed_when: check_gateway_created.rc != 0
+    when: gwsubPrefix is defined and gwsubName is defined and check_gateway.rc == 0

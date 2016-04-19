@@ -8,32 +8,26 @@
 
 #Group
 [test]
-PlatDigAnsible01 ansible_ssh_host=192.168.1.100 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True
-PlatDigAnsible02 ansible_ssh_host=192.168.1.101 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True 
-PlatDigAnsible03 ansible_ssh_host=192.168.1.102 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
-PlatDigAnsible04 ansible_ssh_host=192.168.1.103 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
+PlatDigAnsible01 ansible_ssh_host=192.168.2.100 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True
+#PlatDigAnsible02 ansible_ssh_host=192.168.2.101 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True 
+#PlatDigAnsible03 ansible_ssh_host=192.168.2.102 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
+#PlatDigAnsible04 ansible_ssh_host=192.168.2.103 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=False
+#PlatDigAnsible05 ansible_ssh_host=192.168.2.104 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
 
 
 [all:vars]
 
-rgName = PlatDigTestAnsible05
+rgName = PlatDigTestAnsible01
 location = eastus
 #location = brazilsouth
 
-#vmsize = Standard_A1
-#vmname = PlatDigTest01
 username = azure_admin
 sshfile = /mnt/azure.pub
-#image = Canonical:UbuntuServer:14.04.4-LTS:latest
-#type_os = Linux
-#disksize = 60
 
-#vnetName = PlatDigTest01
-vnetPrefix = 192.168.0.0/16
+vnetPrefix = 10.0.0.0/16
 subnetName = Sub01
-subnetPrefix = 192.168.1.0/24
-privateIPAddress = 192.168.1.10
-#nicName = PlatDigTest01
+subnetPrefix = 10.0.1.0/24
 
-gwsubPrefix = 192.168.255.0/27
+#GATEWAY (Comment is disable)
+gwsubPrefix = 10.0.255.0/27
 gwsubName = GatewaySubnet
