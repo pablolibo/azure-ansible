@@ -7,7 +7,7 @@ RUN sudo apt-add-repository ppa:ansible/ansible -y
 RUN sudo apt-get update
 RUN sudo apt-get install ansible -y
 
-ENV AZURE_CLI_VERSION "0.9.19" 
+ENV AZURE_CLI_VERSION "0.9.20" 
 ENV NODEJS_APT_ROOT "node_4.x" 
 ENV NODEJS_VERSION "4.2.4" 
 RUN apt-get update -qq && \
