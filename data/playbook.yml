@@ -36,10 +36,10 @@
       azure network vnet subnet create --resource-group {{ rgName }} 
       --vnet-name {{ rgName }} --name {{ gwsubName }} 
       --address-prefix {{ gwsubPrefix }}
-    when: check_network.rc != 0
+    when: check_network.rc != 0 and gwsubPrefix is defined and gwsubName is defined
     
   - name: 'was created the Azure Subnet Network'
-    shell: azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} | grep -w {{ subnetName}}
+    shell: azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} | grep -w {{ subnetName }}
     register: check_subnet
     ignore_errors: yes
     changed_when: check_subnet.rc != 0
@@ -180,5 +180,6 @@
       --sku-name Basic --public-ip-name GatewayIP --vnet-name {{ rgName }};
       fi
     register: check_gateway_created
+    ignore_errors: yes
     changed_when: check_gateway_created.rc != 0
     when: gwsubPrefix is defined and gwsubName is defined and check_gateway.rc == 0
