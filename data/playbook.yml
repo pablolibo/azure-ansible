@@ -2,30 +2,36 @@
 - hosts: localhost
   tasks:
   - name: 'was created Azure Resource?'
-    shell: azure group list | grep -w {{ rgName }}
+    shell: >
+      azure group list | grep -w {{ rgName }}
     register: check_resource
     ignore_errors: yes
     changed_when: "check_resource.rc != 0"
 
   - name: 'Creating Azure Resource'
-    shell: azure group create {{ rgName }} {{ location }}
+    shell: >
+      azure group create {{ rgName }} {{ location }}
     when: check_resource.rc != 0
 
   - name: 'was created Azure Network?'
-    shell: azure network vnet list {{ rgName }} | grep -w {{ rgName }}
+    shell: >
+      azure network vnet list {{ rgName }} | grep -w {{ rgName }}
     register: check_network
     ignore_errors: yes
     changed_when: check_network.rc != 0
 
   - name: 'Creating the Network Resource'
     shell: >
-      azure network vnet create --resource-group {{ rgName }} 
-      --name {{ rgName }} --address-prefixes {{ vnetPrefix }} 
+      azure network vnet create 
+      --resource-group {{ rgName }} 
+      --name {{ rgName }} 
+      --address-prefixes {{ vnetPrefix }} 
       --location {{ location }}
     when: check_network.rc != 0
 
   - name: 'was created Azure Sub Network Gateway?'
-    shell: azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} | grep -w {{ gwsubName }}
+    shell: >
+       azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} | grep -w {{ gwsubName }}
     register: check_network_gateway
     ignore_errors: yes
     changed_when: check_network_gateway.rc != 0
@@ -33,13 +39,16 @@
 
   - name: 'Creating the Sub Network Gateway Resource'
     shell: >
-      azure network vnet subnet create --resource-group {{ rgName }} 
-      --vnet-name {{ rgName }} --name {{ gwsubName }} 
+      azure network vnet subnet create 
+      --resource-group {{ rgName }} 
+      --vnet-name {{ rgName }} 
+      --name {{ gwsubName }} 
       --address-prefix {{ gwsubPrefix }}
-    when: check_network.rc != 0 and gwsubPrefix is defined and gwsubName is defined
+    when: check_network.rc != 0
     
   - name: 'was created the Azure Subnet Network'
-    shell: azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} | grep -w {{ subnetName }}
+    shell: >
+       azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} | grep -w {{ subnetName}}
     register: check_subnet
     ignore_errors: yes
     changed_when: check_subnet.rc != 0
@@ -47,36 +56,48 @@
   - name: 'Creating the Subnet Azure'
     shell: >
       azure network vnet subnet create --resource-group {{ rgName }} 
-      --vnet-name {{ rgName }} --name {{ subnetName }} 
+      --vnet-name {{ rgName }} 
+      --name {{ subnetName }} 
       --address-prefix {{ subnetPrefix }}
     when: check_subnet.rc != 0
 
   - name: 'was Created Public IP'
-    shell: azure network public-ip list --resource-group {{ rgName }} > /tmp/ip_{{ rgName }}
+    shell: >
+       azure network public-ip list --resource-group {{ rgName }} > /tmp/ip_{{ rgName }}
     register: check_ip_public
     changed_when: check_ip_public.rc != 0
     
   - name: 'Creating Public IP'
     shell: >
       if ! grep -w {{ item }} /tmp/ip_{{ rgName }}; then
-      azure network public-ip create --resource-group {{ rgName }} 
-      --name {{ item }} --location {{ location }} --allocation-method Static; 
+      azure network public-ip create 
+      --resource-group {{ rgName }} 
+      --name {{ item }} 
+      --location {{ location }} 
+      --allocation-method Static; 
       fi
     when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
     with_items: groups.test
 
   - name: 'was Created Public IP Gateway'
-    shell: azure network public-ip list --resource-group {{ rgName }} | grep -w GatewayIP
+    shell: >
+       azure network public-ip list --resource-group {{ rgName }} | grep -w GatewayIP
     register: check_ip_public_gateway
     ignore_errors: yes
     changed_when: check_ip_public.rc != 0
     
   - name: 'Creating Public IP Gateway'
-    shell: azure network public-ip create --resource-group {{ rgName }} --name GatewayIP --location {{ location }} --allocation-method Dynamic
+    shell: >
+       azure network public-ip create 
+       --resource-group {{ rgName }} 
+       --name GatewayIP 
+       --location {{ location }} 
+       --allocation-method Dynamic
     when: check_ip_public_gateway.rc != 0
 
   - name: 'was Created Azure Storage'
-    shell: azure storage account list --resource-group {{ rgName }} | grep -i {{ rgName }}
+    shell: >
+       azure storage account list --resource-group {{ rgName }} | grep -i {{ rgName }}
     register: check_storage
     ignore_errors: yes
     changed_when: check_storage.rc != 0
@@ -84,13 +105,17 @@
   - name: 'Creating Azure Storage'
     shell: >
       azure storage account create {{ rgName | lower }} 
-      --resource-group {{ rgName }} --location {{ location }} --type LRS 
+      --resource-group {{ rgName }} 
+      --location {{ location }} 
+      --type LRS 
     when: check_storage.rc != 0
 
   - name: 'Register subnet-id'
     shell: >
-      subnetId="$(azure network vnet subnet show --resource-group {{ rgName }} 
-      --vnet-name {{ rgName }} --name {{ subnetName }}|grep Id)" 
+      subnetId="$(azure network vnet subnet show 
+      --resource-group {{ rgName }} 
+      --vnet-name {{ rgName }} 
+      --name {{ subnetName }}|grep Id)" 
       && subnetId=${subnetId#*/} && echo $subnetId
     register: subnetid
     changed_when: subnetid.rc != 0
@@ -100,7 +125,8 @@
      subnetid_key={{subnetid.stdout}}
 
   - name: 'was Created a NIC'
-    shell: azure network nic list --resource-group {{ rgName }} > /tmp/nic_{{ rgName }}
+    shell: >
+       azure network nic list --resource-group {{ rgName }} > /tmp/nic_{{ rgName }}
     register: create_nic
     changed_when: create_nic.rc != 0
 
@@ -108,8 +134,11 @@
   - name: 'Creating a NIC'
     shell: >
       if ! grep -w {{ item }} /tmp/nic_{{ rgName }}; then 
-      azure network nic create --name {{ item }} --resource-group {{ rgName }} 
-      --location {{ location }} --private-ip-address {{ hostvars[item]['ansible_ssh_host'] }} 
+      azure network nic create 
+      --name {{ item }} 
+      --resource-group {{ rgName }} 
+      --location {{ location }} 
+      --private-ip-address {{ hostvars[item]['ansible_ssh_host'] }} 
       --subnet-id {{ subnetid_key }}; 
       fi
     changed_when: False
@@ -120,9 +149,13 @@
   - name: 'Creating a NIC with public ip'
     shell: >
       if ! grep -w {{ item }} /tmp/nic_{{ rgName }}; then
-      azure network nic create --name {{ item }} --resource-group {{ rgName }}
-      --location {{ location }} --private-ip-address {{ hostvars[item]['ansible_ssh_host'] }}
-      --subnet-id {{ subnetid_key }} --public-ip-name {{ item }}; 
+      azure network nic create 
+      --name {{ item }} 
+      --resource-group {{ rgName }}
+      --location {{ location }} 
+      --private-ip-address {{ hostvars[item]['ansible_ssh_host'] }}
+      --subnet-id {{ subnetid_key }} 
+      --public-ip-name {{ item }}; 
       fi
     changed_when: False
     when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
@@ -138,12 +171,18 @@
   - name: 'Creating VM Azure with second disk'
     shell: >
       if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then 
-      azure vm create --vm-size {{ hostvars[item]['vmsize'] }} 
-      --resource-group {{ rgName }} --name {{ item }} 
-      --location {{ location }} --admin-username {{ username }} 
-      --ssh-publickey-file {{ sshfile }} --storage-account-name {{ rgName | lower }} 
-      --os-type {{ hostvars[item]['type_os'] }} --image-urn {{ hostvars[item]['image'] }} 
-      --data-disk-size {{ hostvars[item]['disksize'] }} --subnet-id {{ subnetid_key }} 
+      azure vm create 
+      --vm-size {{ hostvars[item]['vmsize'] }} 
+      --resource-group {{ rgName }} 
+      --name {{ item }} 
+      --location {{ location }} 
+      --admin-username {{ username }} 
+      --ssh-publickey-file {{ sshfile }} 
+      --storage-account-name {{ rgName | lower }} 
+      --os-type {{ hostvars[item]['type_os'] }} 
+      --image-urn {{ hostvars[item]['image'] }} 
+      --data-disk-size {{ hostvars[item]['disksize'] }} 
+      --subnet-id {{ subnetid_key }} 
       --nic-names {{ item }};
       fi
     changed_when: False
@@ -153,11 +192,16 @@
   - name: 'Creating VM Azure'
     shell: >
       if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then
-      azure vm create --vm-size {{ hostvars[item]['vmsize'] }}
-      --resource-group {{ rgName }} --name {{ item }}
-      --location {{ location }} --admin-username {{ username }}
-      --ssh-publickey-file {{ sshfile }} --storage-account-name {{ rgName | lower }}
-      --os-type {{ hostvars[item]['type_os'] }} --image-urn {{ hostvars[item]['image'] }}
+      azure vm create 
+      --vm-size {{ hostvars[item]['vmsize'] }}
+      --resource-group {{ rgName }} 
+      --name {{ item }}
+      --location {{ location }}
+      --admin-username {{ username }}
+      --ssh-publickey-file {{ sshfile }}
+      --storage-account-name {{ rgName | lower }}
+      --os-type {{ hostvars[item]['type_os'] }} 
+      --image-urn {{ hostvars[item]['image'] }}
       --subnet-id {{ subnetid_key }}
       --nic-names {{ item }};
       fi
@@ -175,11 +219,15 @@
   - name: 'Creating a VPN-Gateway'
     shell: >
       if ! grep -w {{ rgName }} /tmp/gateway_{{ rgName }}; then
-      azure network vpn-gateway create --resource-group {{ rgName }}
-      --name {{ rgName }} --location {{ location }}
-      --sku-name Basic --public-ip-name GatewayIP --vnet-name {{ rgName }};
+      azure network vpn-gateway create 
+      --resource-group {{ rgName }}
+      --name {{ rgName }} 
+      --location {{ location }} 
+      --address-prefixes {{ vnetPrefix }}
+      --sku-name Standard 
+      --public-ip-name GatewayIP 
+      --vnet-name {{ rgName }};
       fi
     register: check_gateway_created
-    ignore_errors: yes
     changed_when: check_gateway_created.rc != 0
     when: gwsubPrefix is defined and gwsubName is defined and check_gateway.rc == 0
