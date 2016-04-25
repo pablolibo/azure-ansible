@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #HELP!
 #ansible localhost -i data/hosts -m debug -a 'msg={{ hostvars["controller01"]["ansible_ssh_host"] | to_json }}'
 #ansible localhost -i data/hosts -m debug -a 'msg={{ groups["test"]["ansible_ssh_host"] | to_json }}'
@@ -31,3 +32,38 @@ subnetPrefix = 10.2.0.0/24
 #GATEWAY (Comment is disable)
 gwsubPrefix = 10.2.255.0/27
 gwsubName = GatewaySubnet
+=======
+#HELP!
+#ansible localhost -i data/hosts -m debug -a 'msg={{ hostvars["controller01"]["ansible_ssh_host"] | to_json }}'
+#ansible localhost -i data/hosts -m debug -a 'msg={{ groups["test"]["ansible_ssh_host"] | to_json }}'
+##hostvars["controller01"]["ansible_ssh_host"]
+
+
+
+
+#Group
+[test]
+PlatDigAnsible01 ansible_ssh_host=10.0.0.100 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True
+#PlatDigAnsible02 ansible_ssh_host=192.168.2.101 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True 
+#PlatDigAnsible03 ansible_ssh_host=192.168.2.102 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
+#PlatDigAnsible04 ansible_ssh_host=192.168.2.103 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=False
+#PlatDigAnsible05 ansible_ssh_host=192.168.2.104 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
+
+
+[all:vars]
+
+rgName = PlatDigTestAnsible01
+location = eastus
+#location = brazilsouth
+
+username = azure_admin
+sshfile = /mnt/azure.pub
+
+vnetPrefix = 10.0.0.0/16
+subnetName = Sub01
+subnetPrefix = 10.0.1.0/24
+
+#GATEWAY (Comment is disable)
+gwsubPrefix = 10.0.255.0/27
+gwsubName = GatewaySubnet
+>>>>>>> 483869ccc4c58bac56a475e8e505b02b592f1828
