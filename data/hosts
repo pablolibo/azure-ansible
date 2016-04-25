@@ -8,7 +8,7 @@
 
 #Group
 [test]
-PlatDigAnsible01 ansible_ssh_host=10.0.0.100 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True
+PlatDigAnsible01 ansible_ssh_host=10.2.0.100 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=True
 #PlatDigAnsible02 ansible_ssh_host=192.168.2.101 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=True 
 #PlatDigAnsible03 ansible_ssh_host=192.168.2.102 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=60 public_ip=False
 #PlatDigAnsible04 ansible_ssh_host=192.168.2.103 vmsize=Standard_A1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=False
@@ -17,17 +17,17 @@ PlatDigAnsible01 ansible_ssh_host=10.0.0.100 vmsize=Standard_A1 type_os=Linux im
 
 [all:vars]
 
-rgName = PlatDigTestAnsible01
-location = eastus
-#location = brazilsouth
+rgName = PlatDigTestAnsible04
+#location = eastus
+location = brazilsouth
 
 username = azure_admin
 sshfile = /mnt/azure.pub
 
-vnetPrefix = 10.0.0.0/16
+vnetPrefix = 10.2.0.0/16
 subnetName = Sub01
-subnetPrefix = 10.0.0.0/24
+subnetPrefix = 10.2.0.0/24
 
 #GATEWAY (Comment is disable)
-gwsubPrefix = 10.0.255.0/27
+gwsubPrefix = 10.2.255.0/27
 gwsubName = GatewaySubnet
