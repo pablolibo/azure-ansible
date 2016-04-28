@@ -1,0 +1,24 @@
+#Group
+[vms]
+PlatDigVPN01 sshfile=/mnt/azure.pub ansible_user=azure_admin ansible_host=10.0.0.10 subnet=Sub01 vmsize=Standard_D1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=True
+
+
+[subnet]
+Sub01 network=10.0.0.0/24
+GatewaySubnet network=10.0.255.0/24
+
+[all:vars]
+#Subcription Name (TLF Sandbox or TLFWeb):
+subscription = "TLFWeb"
+
+#Resource Name:
+rgName = PlatDigCloudServices
+
+#Location:
+location = brazilsouth
+
+#Network
+vnetPrefix = 10.0.0.0/16
+
+#VPN type (Basic, Standard and HighPerformance)
+VPN_type = Standard

@@ -15,7 +15,7 @@ GatewaySubnet network=10.0.255.0/24
 subscription = "TLF Sandbox"
 
 #Resource Name:
-rgName = PlatDigResource01
+rgName = PlatDig_Resource-01
 
 #Location:
 location = brazilsouth

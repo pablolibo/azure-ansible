@@ -2,9 +2,13 @@
 - hosts: localhost
   tasks:
 
+  - set_fact:  
+      storage_name: "{{ rgName | lower | regex_replace('[^a-z0-9]+','') }}"
+      vnet_name: "{{ rgName | regex_replace('[^a-zA-Z0-9]+','') }}"
+
   - name: 'Set subscription and ARM'
     shell: >
-      azure config mode arm && azure account set "{{ subscription }}"
+      azure account set "{{ subscription }}"
     register: set_sub_mode
     when: subscription is defined
     changed_when: set_sub_mode.rc != 0
@@ -23,7 +27,7 @@
 
   - name: 'was created Azure Network?'
     shell: >
-      azure network vnet list {{ rgName }} | grep -w {{ rgName }}
+      azure network vnet list {{ rgName }} | grep -w {{ vnet_name }}
     register: check_network
     ignore_errors: yes
     changed_when: check_network.rc != 0
@@ -32,14 +36,15 @@
     shell: >
       azure network vnet create 
       --resource-group {{ rgName }} 
-      --name {{ rgName }} 
+      --name {{ vnet_name }} 
       --address-prefixes {{ vnetPrefix }} 
       --location {{ location }}
+      --subscription {{ subscription }}
     when: check_network.rc != 0
     
   - name: 'was created the Azure Subnet Network'
     shell: >
-      azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ rgName }} > /tmp/subnet_{{ rgName }}
+      azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ vnet_name }} > /tmp/subnet_{{ rgName }}
     register: check_subnet
     changed_when: check_subnet.rc != 0
 
@@ -48,7 +53,7 @@
       if ! grep -w {{ item }} /tmp/subnet_{{ rgName }}; then
       azure network vnet subnet create 
       --resource-group {{ rgName }} 
-      --vnet-name {{ rgName }} 
+      --vnet-name {{ vnet_name }} 
       --name {{ item }} 
       --address-prefix {{ hostvars[item]['network'] }};
       fi
@@ -101,7 +106,7 @@
 
   - name: 'Creating Azure Storage'
     shell: >
-      azure storage account create {{ rgName | lower }} 
+      azure storage account create {{ storage_name }} 
       --resource-group {{ rgName }} 
       --location {{ location }} 
       --type LRS 
@@ -121,7 +126,7 @@
       --resource-group {{ rgName }} 
       --location {{ location }} 
       --private-ip-address {{ hostvars[item]['ansible_host'] }} 
-      --subnet-vnet-name {{ rgName }} 
+      --subnet-vnet-name {{ vnet_name }} 
       --subnet-name {{ hostvars[item]['subnet'] }};
       fi
     changed_when: False
@@ -136,7 +141,7 @@
       --resource-group {{ rgName }}
       --location {{ location }} 
       --private-ip-address {{ hostvars[item]['ansible_host'] }}
-      --subnet-vnet-name {{ rgName }} 
+      --subnet-vnet-name {{ vnet_name }} 
       --subnet-name {{ hostvars[item]['subnet'] }} 
       --public-ip-name {{ item }}; 
       fi
@@ -144,8 +149,6 @@
     when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
     with_items: groups.vms
 
-#  - debug: var=debug_nic
-    
   - name: 'was Created VM azure'
     shell: azure vm list --resource-group {{ rgName }} > /tmp/vm_{{ rgName }}
     register: create_vm
@@ -161,7 +164,7 @@
       --location {{ location }} 
       --admin-username {{ hostvars[item]['ansible_user'] }} 
       --ssh-publickey-file {{ hostvars[item]['sshfile'] }} 
-      --storage-account-name {{ rgName | lower }} 
+      --storage-account-name {{ storage_name }} 
       --os-type {{ hostvars[item]['type_os'] }} 
       --image-urn {{ hostvars[item]['image'] }} 
       --data-disk-size {{ hostvars[item]['disksize'] }} 
@@ -181,7 +184,7 @@
       --location {{ location }} 
       --admin-username {{ hostvars[item]['ansible_user'] }} 
       --ssh-publickey-file {{ hostvars[item]['sshfile'] }} 
-      --storage-account-name {{ rgName | lower }} 
+      --storage-account-name {{ storage_name }}  
       --os-type {{ hostvars[item]['type_os'] }} 
       --image-urn {{ hostvars[item]['image'] }} 
       --nic-names {{ item }}; 
@@ -205,9 +208,9 @@
       --name {{ rgName }}
       --location {{ location }}
       --address-prefixes {{ vnetPrefix }}
-      --sku-name Standard
+      --sku-name {{ VPN_type }}
       --public-ip-name GatewayIP
-      --vnet-name {{ rgName }};
+      --vnet-name {{ vnet_name }};
       fi
     register: check_gateway_created
     changed_when: check_gateway_created.rc != 0
