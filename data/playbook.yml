@@ -2,7 +2,7 @@
 - hosts: localhost
   tasks:
 
-  - set_fact:  
+  - set_fact:
       storage_name: "{{ rgName | lower | regex_replace('[^a-z0-9]+','') }}"
       vnet_name: "{{ rgName | regex_replace('[^a-zA-Z0-9]+','') }}"
 
@@ -34,14 +34,14 @@
 
   - name: 'Creating the Azure Network'
     shell: >
-      azure network vnet create 
-      --resource-group {{ rgName }} 
-      --name {{ vnet_name }} 
-      --address-prefixes {{ vnetPrefix }} 
+      azure network vnet create
+      --resource-group {{ rgName }}
+      --name {{ vnet_name }}
+      --address-prefixes {{ vnetPrefix }}
       --location {{ location }}
       --subscription {{ subscription }}
     when: check_network.rc != 0
-    
+
   - name: 'was created the Azure Subnet Network'
     shell: >
       azure network vnet subnet list --resource-group {{ rgName }} --vnet-name {{ vnet_name }} > /tmp/subnet_{{ rgName }}
@@ -51,10 +51,10 @@
   - name: 'Creating the Subnet Azure'
     shell: >
       if ! grep -w {{ item }} /tmp/subnet_{{ rgName }}; then
-      azure network vnet subnet create 
-      --resource-group {{ rgName }} 
-      --vnet-name {{ vnet_name }} 
-      --name {{ item }} 
+      azure network vnet subnet create
+      --resource-group {{ rgName }}
+      --vnet-name {{ vnet_name }}
+      --name {{ item }}
       --address-prefix {{ hostvars[item]['network'] }};
       fi
     changed_when: False
@@ -66,15 +66,15 @@
       azure network public-ip list --resource-group {{ rgName }} > /tmp/ip_{{ rgName }}
     register: check_ip_public
     changed_when: check_ip_public.rc != 0
-    
+
   - name: 'Creating Public IP'
     shell: >
       if ! grep -w {{ item }} /tmp/ip_{{ rgName }}; then
-      azure network public-ip create 
-      --resource-group {{ rgName }} 
-      --name {{ item }} 
-      --location {{ location }} 
-      --allocation-method Static; 
+      azure network public-ip create
+      --resource-group {{ rgName }}
+      --name {{ item }}
+      --location {{ location }}
+      --allocation-method Static;
       fi
     register: check_create_ip_public
     when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
@@ -87,13 +87,13 @@
     register: check_ip_public_gateway
     ignore_errors: yes
     changed_when: check_ip_public.rc != 0
-    
+
   - name: 'Creating Public IP Gateway'
     shell: >
-      azure network public-ip create 
-      --resource-group {{ rgName }} 
-      --name GatewayIP 
-      --location {{ location }} 
+      azure network public-ip create
+      --resource-group {{ rgName }}
+      --name GatewayIP
+      --location {{ location }}
       --allocation-method Dynamic
     when: check_ip_public_gateway.rc != 0
 
@@ -106,10 +106,10 @@
 
   - name: 'Creating Azure Storage'
     shell: >
-      azure storage account create {{ storage_name }} 
-      --resource-group {{ rgName }} 
-      --location {{ location }} 
-      --type LRS 
+      azure storage account create {{ storage_name }}
+      --resource-group {{ rgName }}
+      --location {{ location }}
+      --type LRS
     when: check_storage.rc != 0
 
   - name: 'was Created a NIC'
@@ -117,33 +117,33 @@
       azure network nic list --resource-group {{ rgName }} > /tmp/nic_{{ rgName }}
     register: create_nic
     changed_when: create_nic.rc != 0
-    
+
   - name: 'Creating a NIC'
     shell: >
-      if ! grep -w {{ item }} /tmp/nic_{{ rgName }}; then 
-      azure network nic create 
-      --name {{ item }} 
-      --resource-group {{ rgName }} 
-      --location {{ location }} 
-      --private-ip-address {{ hostvars[item]['ansible_host'] }} 
-      --subnet-vnet-name {{ vnet_name }} 
+      if ! grep -w {{ item }} /tmp/nic_{{ rgName }}; then
+      azure network nic create
+      --name {{ item }}
+      --resource-group {{ rgName }}
+      --location {{ location }}
+      --private-ip-address {{ hostvars[item]['ansible_host'] }}
+      --subnet-vnet-name {{ vnet_name }}
       --subnet-name {{ hostvars[item]['subnet'] }};
       fi
     changed_when: False
     when: "hostvars[item]['public_ip'] is defined and not hostvars[item]['public_ip']|bool"
     with_items: groups.vms
-        
+
   - name: 'Creating a NIC with public ip'
     shell: >
       if ! grep -w {{ item }} /tmp/nic_{{ rgName }}; then
-      azure network nic create 
-      --name {{ item }} 
+      azure network nic create
+      --name {{ item }}
       --resource-group {{ rgName }}
-      --location {{ location }} 
+      --location {{ location }}
       --private-ip-address {{ hostvars[item]['ansible_host'] }}
-      --subnet-vnet-name {{ vnet_name }} 
-      --subnet-name {{ hostvars[item]['subnet'] }} 
-      --public-ip-name {{ item }}; 
+      --subnet-vnet-name {{ vnet_name }}
+      --subnet-name {{ hostvars[item]['subnet'] }}
+      --public-ip-name {{ item }};
       fi
     changed_when: False
     when: "hostvars[item]['public_ip'] is defined and hostvars[item]['public_ip']|bool"
@@ -154,52 +154,91 @@
     register: create_vm
     changed_when: create_vm.rc != 0
 
-  - name: 'Creating VM Azure with second disk'
+  - name: 'Creating VM Azure (Linux)'
     shell: >
-      if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then 
-      azure vm create 
-      --vm-size {{ hostvars[item]['vmsize'] }} 
-      --resource-group {{ rgName }} 
-      --name {{ item }} 
-      --location {{ location }} 
-      --admin-username {{ hostvars[item]['ansible_user'] }} 
-      --ssh-publickey-file {{ hostvars[item]['sshfile'] }} 
-      --storage-account-name {{ storage_name }} 
-      --os-type {{ hostvars[item]['type_os'] }} 
-      --image-urn {{ hostvars[item]['image'] }} 
-      --data-disk-size {{ hostvars[item]['disksize'] }} 
+      if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then
+      azure vm create
+      --vm-size {{ hostvars[item]['vmsize'] }}
+      --resource-group {{ rgName }}
+      --name {{ item }}
+      --location {{ location }}
+      --admin-username {{ hostvars[item]['ansible_user'] }}
+      --ssh-publickey-file {{ hostvars[item]['sshfile'] }}
+      --storage-account-name {{ storage_name }}
+      --os-type {{ hostvars[item]['type_os'] }}
+      --image-urn {{ hostvars[item]['image'] }}
       --nic-names {{ item }};
       fi
     changed_when: False
     with_items: groups.vms
-    when: "{{ hostvars[item]['disksize'] }} > 0"
+    when: hostvars[item]['disksize'] == 0 and hostvars[item]['type_os'] == "Linux"
 
-  - name: 'Creating VM Azure'
+  - name: 'Creating VM Azure with second disk (Linux)'
     shell: >
       if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then
-      azure vm create 
-      --vm-size {{ hostvars[item]['vmsize'] }} 
-      --resource-group {{ rgName }} 
-      --name {{ item }} 
-      --location {{ location }} 
-      --admin-username {{ hostvars[item]['ansible_user'] }} 
-      --ssh-publickey-file {{ hostvars[item]['sshfile'] }} 
-      --storage-account-name {{ storage_name }}  
-      --os-type {{ hostvars[item]['type_os'] }} 
-      --image-urn {{ hostvars[item]['image'] }} 
-      --nic-names {{ item }}; 
+      azure vm create
+      --vm-size {{ hostvars[item]['vmsize'] }}
+      --resource-group {{ rgName }}
+      --name {{ item }}
+      --location {{ location }}
+      --admin-username {{ hostvars[item]['ansible_user'] }}
+      --ssh-publickey-file {{ hostvars[item]['sshfile'] }}
+      --storage-account-name {{ storage_name }}
+      --os-type {{ hostvars[item]['type_os'] }}
+      --image-urn {{ hostvars[item]['image'] }}
+      --data-disk-size {{ hostvars[item]['disksize'] }}
+      --nic-names {{ item }};
       fi
     changed_when: False
     with_items: groups.vms
-    when: "{{ hostvars[item]['disksize'] }} == 0"
-    
+    when: hostvars[item]['disksize'] > 0 and hostvars[item]['type_os'] == "Linux"
+
+  - name: 'Creating VM Azure (Windows)'
+    shell: >
+      if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then
+      azure vm create
+      --vm-size {{ hostvars[item]['vmsize'] }}
+      --resource-group {{ rgName }}
+      --name {{ item }}
+      --location {{ location }}
+      --admin-username {{ hostvars[item]['ansible_user'] }}
+      --admin-password {{ hostvars[item]['password'] }}
+      --storage-account-name {{ storage_name }}
+      --os-type {{ hostvars[item]['type_os'] }}
+      --image-urn {{ hostvars[item]['image'] }}
+      --nic-names {{ item }};
+      fi
+    changed_when: False
+    with_items: groups.vms
+    when: hostvars[item]['disksize'] == 0 and hostvars[item]['type_os'] == "Windows"
+
+  - name: 'Creating VM Azure with second disk (Windows)'
+    shell: >
+      if ! grep -w {{ item }} /tmp/vm_{{ rgName }}; then
+      azure vm create
+      --vm-size {{ hostvars[item]['vmsize'] }}
+      --resource-group {{ rgName }}
+      --name {{ item }}
+      --location {{ location }}
+      --admin-username {{ hostvars[item]['ansible_user'] }}
+      --admin-password {{ hostvars[item]['password'] }}
+      --storage-account-name {{ storage_name }}
+      --os-type {{ hostvars[item]['type_os'] }}
+      --image-urn {{ hostvars[item]['image'] }}
+      --data-disk-size {{ hostvars[item]['disksize'] }}
+      --nic-names {{ item }};
+      fi
+    changed_when: False
+    with_items: groups.vms
+    when: hostvars[item]['disksize'] > 0 and hostvars[item]['type_os'] == "Windows"
+
   - name: 'was Created VPN-Gateway?'
     shell: >
       azure network vpn-gateway list --resource-group {{ rgName }} > /tmp/gateway_{{ rgName }}
     register: check_gateway
     changed_when: check_gateway.rc != 0
     when: VPN_type is defined
-    
+
   - name: 'Creating a VPN-Gateway'
     shell: >
       if ! grep -w {{ rgName }} /tmp/gateway_{{ rgName }}; then

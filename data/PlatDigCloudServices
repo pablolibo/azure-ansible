@@ -2,6 +2,7 @@
 [vms]
 PlatDigVPN01 sshfile=/mnt/azure.pub ansible_user=azure_admin ansible_host=10.0.0.10 subnet=Sub01 vmsize=Standard_D1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=True
 PlatDigJenkins01 sshfile=/mnt/azure.pub ansible_user=azure_admin ansible_host=10.0.0.11 subnet=Sub01 vmsize=Standard_D1 type_os=Linux image=Canonical:UbuntuServer:14.04.4-LTS:latest disksize=0 public_ip=False
+PlatDigJenWin01 ansible_user=azure_admin ansible_host=10.0.0.12 subnet=Sub01 vmsize=Standard_D2 type_os=Windows image=MicrosoftWindowsServer:WindowsServer:2008-R2-SP1:latest disksize=0 public_ip=False password=Pl4D1g4!
 
 [subnet]
 Sub01 network=10.0.0.0/24
